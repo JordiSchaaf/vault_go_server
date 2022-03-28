@@ -25,8 +25,9 @@ func main() {
 	userRoutes := server.Group("/users")
 	{
 		userRoutes.GET("/", controllers.GetUsers)
-		userRoutes.POST("/", controllers.CreateUser)
+		userRoutes.POST("/register", controllers.CreateUser)
+		userRoutes.DELETE("/:userId", controllers.DeleteUser)
 	}
-	
+
 	server.Run()
 }

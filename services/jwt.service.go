@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"os"
 	"time"
@@ -8,6 +9,7 @@ import (
 
 type JWTService interface {
 	GenerateToken(userId string, email string) string
+	ValidateToken(tokenString string) *jwt.Token
 }
 
 type jwtService struct {
@@ -51,5 +53,20 @@ func (j *jwtService) GenerateToken(userId string, email string) string {
 	if err != nil {
 		panic(err)
 	}
+	return t
+}
+
+func (j *jwtService) ValidateToken(tokenString string) *jwt.Token {
+	t, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method %v", token.Header["alg"])
+		}
+		return []byte(j.secretKey), nil
+	})
+
+	if err != nil {
+		return nil
+	}
+
 	return t
 }
