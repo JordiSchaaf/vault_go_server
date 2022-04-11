@@ -10,7 +10,7 @@ import (
 
 type UserService interface {
 	GetAllUsers() ([]models.User, error)
-	CreateUser(requestData validators.CreateUser)
+	RegisterUser(requestData validators.CreateUser) (*models.User, error)
 }
 
 type userService struct{}
@@ -25,7 +25,7 @@ func (c *userService) GetAllUsers() ([]models.User, error) {
 	return users, nil
 }
 
-func (c *userService) CreateUser(requestData validators.CreateUser) {
+func (c *userService) RegisterUser(requestData validators.CreateUser) (*models.User, error) {
 	user := models.User{
 		Email:           requestData.Email,
 		Password:        hashPassword([]byte(requestData.Password)),
@@ -33,7 +33,11 @@ func (c *userService) CreateUser(requestData validators.CreateUser) {
 		LastName:        requestData.LastName,
 		PermissionLevel: 2,
 	}
-	utils.DB.Create(&user)
+	res := utils.DB.Create(&user)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	return &user, nil
 }
 
 func hashPassword(pwd []byte) string {
@@ -44,3 +48,11 @@ func hashPassword(pwd []byte) string {
 	}
 	return string(hash)
 }
+
+//func (c *userService) DeleteUser(userIdToRemove string, issuerId string) error {
+//	user, err := utils.DB.Find(userIdToRemove)
+//	if err != nil {
+//		return err
+//	}
+//
+//}

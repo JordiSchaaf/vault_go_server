@@ -22,7 +22,7 @@ func GetUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": users})
 }
 
-func CreateUser(c *gin.Context) {
+func RegisterUser(c *gin.Context) {
 	// Validate input
 	var newUser validators.CreateUser
 	err := c.ShouldBindJSON(&newUser)
@@ -31,15 +31,20 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	userService.CreateUser(newUser)
+	res, err := userService.RegisterUser(newUser)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"email": res.Email})
 }
 
 func DeleteUser(c *gin.Context) {
-	userId := c.Param("userId")
+	userIdToRemove := c.Param("userId")
 
 	token := jwtService.ValidateToken(c.GetHeader("Authorization"))
 	claims := token.Claims.(jwt.MapClaims)
 	issuerId := fmt.Sprintf("%v", claims["user_id"])
 
-	fmt.Println(userId, issuerId)
+	fmt.Println(userIdToRemove, issuerId)
 }
