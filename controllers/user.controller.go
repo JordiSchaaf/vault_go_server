@@ -46,5 +46,10 @@ func DeleteUser(c *gin.Context) {
 	claims := token.Claims.(jwt.MapClaims)
 	issuerId := fmt.Sprintf("%v", claims["user_id"])
 
-	fmt.Println(userIdToRemove, issuerId)
+	err := userService.DeleteUser(userIdToRemove, issuerId)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User removed"})
 }

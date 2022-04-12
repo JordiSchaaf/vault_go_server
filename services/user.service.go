@@ -11,6 +11,7 @@ import (
 type UserService interface {
 	GetAllUsers() ([]models.User, error)
 	RegisterUser(requestData validators.CreateUser) (*models.User, error)
+	DeleteUser(userIdToRemove string, issuerId string) error
 }
 
 type userService struct{}
@@ -49,10 +50,15 @@ func hashPassword(pwd []byte) string {
 	return string(hash)
 }
 
-//func (c *userService) DeleteUser(userIdToRemove string, issuerId string) error {
-//	user, err := utils.DB.Find(userIdToRemove)
-//	if err != nil {
-//		return err
-//	}
-//
-//}
+func (c *userService) DeleteUser(userIdToRemove string, issuerId string) error {
+	if utils.IsUserAuthorized(issuerId) && userIdToRemove != issuerId {
+		userToRemove := models.User{}
+		res := utils.DB.Where("id = ?", userIdToRemove).Delete(&userToRemove)
+		if res.Error != nil {
+			return nil
+		}
+		return res.Error
+	}
+	// TODO return error dat de user unauthorized is
+	return nil
+}
