@@ -22,6 +22,32 @@ func GetUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": users})
 }
 
+func GetUser(c *gin.Context) {
+	userId := c.Param("userId")
+
+	token := jwtService.ValidateToken(c.GetHeader("Authorization"))
+	claims := token.Claims.(jwt.MapClaims)
+	issuerId := fmt.Sprintf("%v", claims["user_id"])
+
+	user, err := userService.GetUser(userId, issuerId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "Could not get data for this user"})
+	}
+	c.JSON(http.StatusOK, gin.H{"data": user})
+}
+
+func GetMe(c *gin.Context) {
+	token := jwtService.ValidateToken(c.GetHeader("Authorization"))
+	claims := token.Claims.(jwt.MapClaims)
+	issuerId := fmt.Sprintf("%v", claims["user_id"])
+
+	user, err := userService.GetUser(issuerId, issuerId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "Could not get data for this user"})
+	}
+	c.JSON(http.StatusOK, gin.H{"data": user})
+}
+
 func RegisterUser(c *gin.Context) {
 	// Validate input
 	var newUser validators.CreateUser

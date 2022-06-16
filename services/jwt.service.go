@@ -43,7 +43,7 @@ func (j *jwtService) GenerateToken(userId string, email string) string {
 		userId,
 		email,
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().AddDate(0, 0, 1).Unix(),
+			ExpiresAt: time.Now().Add(time.Hour * 4).Unix(),
 			Issuer:    j.issuer,
 			IssuedAt:  time.Now().Unix(),
 		},

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"vault/server/models"
@@ -9,7 +10,8 @@ import (
 )
 
 type UserService interface {
-	GetAllUsers() ([]models.User, error)
+	GetAllUsers() (*[]*models.User, error)
+	GetUser(userId string, issuerId string) (*models.User, error)
 	RegisterUser(requestData validators.CreateUser) (*models.User, error)
 	DeleteUser(userIdToRemove string, issuerId string) error
 }
@@ -20,10 +22,25 @@ func NewUserService() UserService {
 	return &userService{}
 }
 
-func (c *userService) GetAllUsers() ([]models.User, error) {
-	var users []models.User
-	utils.DB.Find(&users)
-	return users, nil
+func (c *userService) GetAllUsers() (*[]*models.User, error) {
+	var users []*models.User
+	res := utils.DB.Find(&users)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	return &users, nil
+}
+
+func (c *userService) GetUser(userId string, issuerId string) (*models.User, error) {
+	if utils.IsUserAuthorized(issuerId) || userId == issuerId {
+		user := models.User{}
+		res := utils.DB.First(&user, "id = ?", issuerId)
+		if res.Error == nil {
+			return nil, res.Error
+		}
+		return &user, nil
+	}
+	return nil, errors.New("unauthorized")
 }
 
 func (c *userService) RegisterUser(requestData validators.CreateUser) (*models.User, error) {
@@ -59,6 +76,5 @@ func (c *userService) DeleteUser(userIdToRemove string, issuerId string) error {
 		}
 		return res.Error
 	}
-	// TODO return error dat de user unauthorized is
-	return nil
+	return errors.New("unauthorized")
 }
